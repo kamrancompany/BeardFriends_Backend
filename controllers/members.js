@@ -1,7 +1,4 @@
-const User = require('../models/users');
-const barberProff = require('../models/barberProf');
-const ShopDetails = require('../models/shopDetails');
-const time = require('../models/openingTimeSchema');
+const User = require('../models/membersmodel/member');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -11,9 +8,7 @@ const multer = require('multer')
 const { validationResult } = require('express-validator');
 
 
-
-
-
+// =========================================Verfication Email =========================================================
 
 const sendVerificationEmail = async (user) => {
   const transporter = nodemailer.createTransport({
@@ -37,8 +32,13 @@ const sendVerificationEmail = async (user) => {
   await transporter.sendMail(mailOptions);
 };
 
+// =========================================Verfication Email =========================================================
 
-// Function to send welcome email
+
+
+
+//====================================== Function to send welcome email================================================
+
 const sendWelcomeEmail = async (user) => {
   const transporter = nodemailer.createTransport({
     host: 'smtp.ethereal.email',
@@ -60,9 +60,13 @@ const sendWelcomeEmail = async (user) => {
   await transporter.sendMail(mailOptions);
 };
 
+//====================================== Function to send welcome email================================================
 
 
-// Function to send password reset email
+
+//======================================Function to send password reset email==========================================
+
+
 const sendPasswordResetEmail = async (user) => {
   const transporter = nodemailer.createTransport({
     host: 'smtp.ethereal.email',
@@ -87,7 +91,13 @@ const sendPasswordResetEmail = async (user) => {
   await transporter.sendMail(mailOptions);
 };
 
-exports.register = async (req, res, next) => {
+//====================================== Function to send password reset email ==========================================
+
+                                        
+
+//========================================== Member's Registration Start======================================================
+
+exports.registerMember = async (req, res, next) => {
   const { username, email, password, cpassword } = req.body;
 
   const errors = validationResult(req);
@@ -117,7 +127,12 @@ exports.register = async (req, res, next) => {
   }
 };
 
-exports.login = async (req, res, next) => {
+//========================================== Member's Registration Ending =====================================================
+
+
+//========================================== Member's Login Start ======================================================
+
+exports.loginMember = async (req, res, next) => {
   const { email, password } = req.body;
 
   // Validate input fields
@@ -147,7 +162,13 @@ exports.login = async (req, res, next) => {
   }
 };
 
-exports.resetPassword = async (req, res, next) => {
+//========================================== Member's Login Start ======================================================
+
+
+
+//========================================== Member's Forget PSWD/Reset PSWD Start ======================================================
+
+exports.forgetPassMember = async (req, res, next) => {
   const { email } = req.body;
 
   // Validate input fields
@@ -178,7 +199,14 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
-exports.addNewPswd = async (req, res, next) => {
+//========================================== Member's Forget PSWD/Reset PSWD End ======================================================
+
+
+
+
+//========================================== Member's Forget & Addig New PSWD Start ======================================================
+
+exports.addNewPswdMember = async (req, res, next) => {
   const { password } = req.body;
   const { cpassword } = req.body;
   const { resetToken } = req.params;
@@ -219,66 +247,5 @@ exports.addNewPswd = async (req, res, next) => {
   }
 };
 
+//========================================== Member's Forget & Addig New PSWD Start ======================================================
 
-
-// ============================================ set Profile api ==========================================================
-
-
-exports.setProfileDetails = async (req, res, next) => {
-  try {
-    const { name, email, number } = req.body;
-    const profilePicture = req.file.path;
-
-    const user = await barberProff.create({
-      name,
-      email,
-      number,
-      profilePicture,
-    });
-
-    res.json({ message: "Data inserted successfully" });
-  } catch (error) {
-    console.log(error);
-    next(error);
-  }
-};
-
-exports.setShopDetails = async (req, res, next) => {
-  try {
-    const { shopName, shopEmail, shopPhone, shopAddress, shopSits, staffMembers, About } = req.body;
-    const shop = await ShopDetails.create({
-      shopName,
-      shopEmail,
-      shopPhone,
-      shopAddress,
-      shopSits,
-      staffMembers,
-      About
-    });
-
-    res.json({shop});
-  }
-  catch (err) {
-    console.log(err);
-    next(err);
-  }
-}
-
-exports.setOpenClosetime= async(req,res,next)=>{
-    
-     try{
-         const{day,openingTime,closingTime}=req.body;
-         const setTime = await time.create({
-          day,
-          openingTime,
-          closingTime
-        });
-    
-        res.json({setTime});
-     }
-     catch(error){
-       console.log(error)
-       next(error)
-     }
-
-}

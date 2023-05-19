@@ -3,7 +3,7 @@ const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
-const barberSchema = mongoose.Schema(
+const memberSchema = mongoose.Schema(
   {
     username: {
       type: String,
@@ -24,6 +24,16 @@ const barberSchema = mongoose.Schema(
       minlength: 6,
       select: false,
     },
+    cpassword: {
+      type: String,
+      required: [true, "Please confirm your password"],
+      // validate: {
+      //   validator: function (value) {
+      //     return value === this.password;
+      //   },
+      //   message: "Passwords do not match",
+      // },
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
   },
@@ -32,27 +42,28 @@ const barberSchema = mongoose.Schema(
   }
 );
 
-members.pre("save", async function (next) {
+memberSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     next();
   }
 
   const salt = await bcryptjs.genSalt(10);
   this.password = await bcryptjs.hash(this.password, salt);
+  this.cpassword = await bcryptjs.hash(this.cpassword, salt);
   next();
 });
 
-members.methods.matchPasswords = async function (password) {
+memberSchema.methods.matchPasswords = async function (password) {
   return await bcryptjs.compare(password, this.password);
 };
 
-members.methods.getSignedToken = function () {
+memberSchema.methods.getSignedToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
     expiresIn: "1h",
   });
 };
 
-members.methods.getResetPasswordToken = function () {
+memberSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
   this.resetPasswordToken = crypto
     .createHash("sha256")
@@ -62,9 +73,6 @@ members.methods.getResetPasswordToken = function () {
   return resetToken;
 };
 
+const Member = mongoose.model("Members", memberSchema);
 
-
-const  barbers= mongoose.model('Members', barberSchema)
-
-module.exports=barbers
-
+module.exports = Member;
