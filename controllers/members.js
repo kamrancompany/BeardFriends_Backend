@@ -1,4 +1,5 @@
 const User = require('../models/membersmodel/member');
+const DigitalStamp = require('../models/membersmodel/digitalStamp');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -116,7 +117,10 @@ exports.registerMember = async (req, res, next) => {
       password,
       cpassword,
     });
-
+        // Assign a digital stamp to the member
+        const digitalStamp = await DigitalStamp.create({});
+        user.assignedDigitalStamp = digitalStamp._id;
+        await user.save();
     await sendVerificationEmail(user);
 
     const token = user.getSignedToken(); // Create a token using the getSignedToken method

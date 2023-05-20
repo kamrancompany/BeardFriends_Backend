@@ -44,6 +44,28 @@ const {
   }=require('../controllers/members')
   
 
+
+// ::::::::::::: Admin Routers::::::::::::::::::::::::::::::::::::::
+
+const {
+  adminRegister,
+  adminLogin,
+  adminForgetPswd,
+  adminResetPswd,
+  adminSetProf,
+  getActiveBarbers,
+  getRegisteredBarbers,
+  getDigitalStampCount,
+
+  // e-commerce 
+
+  addProduct,
+  getAllProducts,
+  getAllOrders,
+  getCurrentOrders
+}=require('../controllers/admin')
+
+
   //Barber Api's routes
   router.post('/register', register);
   router.post('/login', login);
@@ -60,5 +82,23 @@ const {
   router.post('/loginMember', loginMember);
   router.post('/forgetPassMember', forgetPassMember);
   router.post('/addnewpswdMember/:resetToken', addNewPswdMember);
+
+  //Admin Api's routes
+  router.post('/adminRegister', adminRegister);
+  router.post('/adminLogin', adminLogin);
+  router.post('/adminForgetPswd', adminForgetPswd);
+  router.post('/adminResetPswd/:resetToken', adminResetPswd);
+  router.post('/adminSetProf',upload.single('profilePicture'), adminSetProf)
+  router.get('/getActive', getActiveBarbers);
+  router.get('/getRegistered', getRegisteredBarbers);
+  router.get('/getDigStamCount', getDigitalStampCount);
+
+
+  //Ecommerce Api's Routes
+
+router.get("/products", getAllProducts);
+router.post("/products", upload.array("photos"), addProduct);
+router.get("/orders", getAllOrders);
+router.get("/orders/current", getCurrentOrders);
 
   module.exports = router;

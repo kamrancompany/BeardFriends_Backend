@@ -3,7 +3,7 @@ const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
-const memberSchema = mongoose.Schema(
+const adminSchema = mongoose.Schema(
   {
     username: {
       type: String,
@@ -36,21 +36,13 @@ const memberSchema = mongoose.Schema(
     },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
-
-    // New field for assigned digital stamp
-   // New field for count of digital stamps
-        digitalStampCount: {
-          type: Number,
-          default: 0,
-        },
-
   },
   {
     timestamps: true,
   }
 );
 
-memberSchema.pre("save", async function (next) {
+adminSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     next();
   }
@@ -61,17 +53,17 @@ memberSchema.pre("save", async function (next) {
   next();
 });
 
-memberSchema.methods.matchPasswords = async function (password) {
+adminSchema.methods.matchPasswords = async function (password) {
   return await bcryptjs.compare(password, this.password);
 };
 
-memberSchema.methods.getSignedToken = function () {
+adminSchema.methods.getSignedToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
     expiresIn: "1h",
   });
 };
 
-memberSchema.methods.getResetPasswordToken = function () {
+adminSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
   this.resetPasswordToken = crypto
     .createHash("sha256")
@@ -81,6 +73,6 @@ memberSchema.methods.getResetPasswordToken = function () {
   return resetToken;
 };
 
-const Member = mongoose.model("Members", memberSchema);
+const Admin = mongoose.model("Admin", adminSchema);
 
-module.exports = Member;
+module.exports = Admin;

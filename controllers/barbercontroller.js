@@ -12,9 +12,7 @@ const multer = require('multer')
 const { validationResult } = require('express-validator');
 
 
-
-
-
+// =========================================Verfication Email =========================================================
 
 const sendVerificationEmail = async (user) => {
   const transporter = nodemailer.createTransport({
@@ -38,8 +36,13 @@ const sendVerificationEmail = async (user) => {
   await transporter.sendMail(mailOptions);
 };
 
+// =========================================Verfication Email =========================================================
 
-// Function to send welcome email
+
+
+
+//====================================== Function to send welcome email================================================
+
 const sendWelcomeEmail = async (user) => {
   const transporter = nodemailer.createTransport({
     host: 'smtp.ethereal.email',
@@ -61,9 +64,13 @@ const sendWelcomeEmail = async (user) => {
   await transporter.sendMail(mailOptions);
 };
 
+//====================================== Function to send welcome email================================================
 
 
-// Function to send password reset email
+
+//======================================Function to send password reset email==========================================
+
+
 const sendPasswordResetEmail = async (user) => {
   const transporter = nodemailer.createTransport({
     host: 'smtp.ethereal.email',
@@ -87,6 +94,12 @@ const sendPasswordResetEmail = async (user) => {
 
   await transporter.sendMail(mailOptions);
 };
+
+//====================================== Function to send password reset email ==========================================
+
+                                        
+
+//========================================== Barber's Registration Start======================================================
 
 exports.register = async (req, res, next) => {
   const { username, email, password, cpassword } = req.body;
@@ -118,6 +131,11 @@ exports.register = async (req, res, next) => {
   }
 };
 
+//========================================== Barber's Registration Ending =====================================================
+
+
+//========================================== Barber's Login Start ======================================================
+
 exports.login = async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -147,6 +165,12 @@ exports.login = async (req, res, next) => {
     next(error);
   }
 };
+
+//========================================== Barber's Login Start ======================================================
+
+
+
+//========================================== Barber's Forget PSWD/Reset PSWD Start ======================================================
 
 exports.resetPassword = async (req, res, next) => {
   const { email } = req.body;
@@ -178,6 +202,13 @@ exports.resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+//========================================== Barber's Forget PSWD/Reset PSWD End ======================================================
+
+
+
+
+//========================================== Barber's Forget & Addig New PSWD Start ======================================================
 
 exports.addNewPswd = async (req, res, next) => {
   const { password } = req.body;
@@ -220,10 +251,11 @@ exports.addNewPswd = async (req, res, next) => {
   }
 };
 
+//========================================== Barber's Forget & Addig New PSWD Start ======================================================
 
 
-// ============================================ set Profile api ==========================================================
 
+// ============================================ Set Braber Profile Api ==========================================================
 
 exports.setProfileDetails = async (req, res, next) => {
   try {
@@ -257,7 +289,7 @@ exports.setShopDetails = async (req, res, next) => {
       About
     });
 
-    res.json({shop});
+    res.json({ shop });
   }
   catch (err) {
     console.log(err);
@@ -265,31 +297,33 @@ exports.setShopDetails = async (req, res, next) => {
   }
 }
 
-exports.setOpenClosetime= async(req,res,next)=>{
-     try{
-        
-         const setTime = await time.create({
-           ...req.body
-        });
-       
-        // console.log(Tuesday)
-        res.json({setTime});
-     }
-     catch(error){
-       console.log(error)
-       next(error)
-     }
+exports.setOpenClosetime = async (req, res, next) => {
+  try {
+
+    const setTime = await time.create({
+      ...req.body
+    });
+
+    // console.log(Tuesday)
+    res.json({ setTime });
+  }
+  catch (error) {
+    console.log(error)
+    next(error)
+  }
 
 }
 
-exports.setPricing= async(req,res,next)=>{
-   try{
+exports.setPricing = async (req, res, next) => {
+  try {
     const pricing = await price.create({
       ...req.body
-   });
-   res.json({pricing});
-   }
-   catch(err){
-     console.log(err)
-   }
+    });
+    res.json({ pricing });
+  }
+  catch (err) {
+    console.log(err)
+  }
 }
+
+// ============================================ Set Braber Profile Api ==========================================================
