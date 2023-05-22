@@ -1,7 +1,12 @@
 const mongoose=require('mongoose')
 
 const BarberProf = new mongoose.Schema({
-        
+    
+    barberId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Barbers',
+        required: true
+      },
          name:{
              type:String,
              required:true

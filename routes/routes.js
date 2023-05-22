@@ -22,25 +22,25 @@ const upload = multer({ storage: storage })
 // ::::::::::::: Barber's Routers::::::::::::::::::::::::::::::::::::::
 const router=express.Router()
 const {
-    register,
-    login,
-    resetPassword,
-    addNewPswd,
-    setProfileDetails,
-    setShopDetails,
-    setOpenClosetime,
-    setPricing
-  
+        register,
+        login,
+        resetPassword,
+        addNewPswd,
+        setProfileDetails,
+        setShopDetails,
+        setOpenClosetime,
+        setPricing
+      
   } = require('../controllers/barbercontroller');
 
 
 // ::::::::::::: Member's Routers::::::::::::::::::::::::::::::::::::::
 
   const {
-    registerMember,
-    loginMember,
-    forgetPassMember,
-    addNewPswdMember,
+        registerMember,
+        loginMember,
+        forgetPassMember,
+        addNewPswdMember,
   }=require('../controllers/members')
   
 
@@ -48,21 +48,27 @@ const {
 // ::::::::::::: Admin Routers::::::::::::::::::::::::::::::::::::::
 
 const {
-  adminRegister,
-  adminLogin,
-  adminForgetPswd,
-  adminResetPswd,
-  adminSetProf,
-  getActiveBarbers,
-  getRegisteredBarbers,
-  getDigitalStampCount,
+        adminRegister,
+        adminLogin,
+        adminForgetPswd,
+        adminResetPswd,
+        adminSetProf,
+        getActiveBarbers,
+        getRegisteredBarbers,
+        getDigitalStampCount,
 
-  // e-commerce 
+        // e-commerce 
 
-  addProduct,
-  getAllProducts,
-  getAllOrders,
-  getCurrentOrders
+        addProduct,
+        getAllProducts,
+        getAllOrders,
+        getCurrentOrders,
+
+        // Deletion & Restriction
+        deleteUser,
+        deleteBarber,
+        // deleteBarberProfile,
+        restrictUser
 }=require('../controllers/admin')
 
 
@@ -100,5 +106,10 @@ router.get("/products", getAllProducts);
 router.post("/products", upload.array("photos"), addProduct);
 router.get("/orders", getAllOrders);
 router.get("/orders/current", getCurrentOrders);
+
+router.delete("/users/:memberId", deleteUser);
+router.delete("/barbers/:BarberId", deleteBarber);
+// router.delete("/barbersProfile/:barberProfileId", deleteBarberProfile);
+router.put("/users/:userId/restrict", restrictUser);
 
   module.exports = router;

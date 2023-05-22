@@ -1,6 +1,10 @@
 const Admin = require('../models/admin_model/admin');
 const DigitalStamp = require('../models/membersmodel/digitalStamp');
 const BarberProf = require('../models/barbermodels/barberProf');
+const User = require("../models/membersmodel/member");
+const Barber = require("../models/barbermodels/users");
+const BarberProfile=require('../models/barbermodels/barberProf')
+
 
 const Product = require("../models/e_commerce/productSchema");
 const Order = require("../models/e_commerce/orderSchema");
@@ -10,6 +14,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const mongoose = require('mongoose');
 const multer = require('multer')
 
 const { validationResult } = require('express-validator');
@@ -100,7 +105,7 @@ const sendPasswordResetEmail = async (user) => {
 
 //====================================== Function to send password reset email ==========================================
 
-                                        
+
 
 //========================================== Barber's Registration Start======================================================
 
@@ -339,7 +344,7 @@ exports.addProduct = async (req, res, next) => {
   try {
     const { name, description, price } = req.body;
     const photos = req.files.map(file => file.path);
-
+    
     const product = await Product.create({
       name,
       description,
@@ -389,3 +394,71 @@ exports.getCurrentOrders = async (req, res, next) => {
     next(error);
   }
 };
+
+
+
+// ============================================================== Deletion & Restriction ========================================
+
+
+exports.deleteUser = async (req, res, next) => {
+  let memberId = req.params.memberId;
+
+  memberId = memberId.trim();
+
+  console.log(memberId);
+
+  try {
+    const deletedUser = await User.deleteOne({ _id: memberId });
+
+    if (deletedUser.deletedCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+exports.deleteBarber = async (req, res, next) => {
+     
+      let BarberId = req.params.BarberId;
+      BarberId = BarberId.trim();
+    
+      try {
+        const deletedUser = await Barber.deleteOne({ _id: BarberId });
+
+        if (deletedUser.deletedCount === 0) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+          // Delete the barber's profile as well
+          await BarberProfile.deleteOne({ barberId: BarberId });
+
+          res.status(200).json({ message: "Barber and profile deleted successfully" });
+
+
+      } catch (error) {
+        console.log(error);
+        next(error);
+      }
+};
+
+
+
+
+// Restrict a user by ID
+exports.restrictUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    // Update the user's status to restricted
+    await User.findByIdAndUpdate(userId, { status: "restricted" });
+
+    res.json({ message: "User restricted successfully" });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+}

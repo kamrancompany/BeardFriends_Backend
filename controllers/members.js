@@ -120,11 +120,13 @@ exports.registerMember = async (req, res, next) => {
         // Assign a digital stamp to the member
         const digitalStamp = await DigitalStamp.create({});
         user.assignedDigitalStamp = digitalStamp._id;
-        await user.save();
-    await sendVerificationEmail(user);
 
+        const savedMember = await user.save();
+        const memberId = savedMember._id.toString();
+    
+        await sendVerificationEmail(savedMember);
     const token = user.getSignedToken(); // Create a token using the getSignedToken method
-    res.status(201).json({ message: "User registered successfully", token });
+    res.status(201).json({ message: "User registered successfully", token,memberId });
   } catch (error) {
     console.log(error);
     next(error);

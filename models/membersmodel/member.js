@@ -41,7 +41,7 @@ const memberSchema = mongoose.Schema(
    // New field for count of digital stamps
         digitalStampCount: {
           type: Number,
-          default: 0,
+          default: 1,
         },
 
   },

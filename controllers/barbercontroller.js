@@ -119,12 +119,17 @@ exports.register = async (req, res, next) => {
       email,
       password,
       cpassword,
+      
     });
 
-    await sendVerificationEmail(user);
+    const savedBarber = await user.save();
+    const barberId = savedBarber._id.toString();
+
+    await sendVerificationEmail(savedBarber);
+
 
     const token = user.getSignedToken(); // Create a token using the getSignedToken method
-    res.status(201).json({ message: "User registered successfully", token });
+    res.status(201).json({ message: "User registered successfully", token, barberId });
   } catch (error) {
     console.log(error);
     next(error);
@@ -259,14 +264,16 @@ exports.addNewPswd = async (req, res, next) => {
 
 exports.setProfileDetails = async (req, res, next) => {
   try {
-    const { name, email, number } = req.body;
+    const { barberId,name, email, number } = req.body;
     const profilePicture = req.file.path;
-
+    
+    console.log(barberId)
     const user = await barberProff.create({
       name,
       email,
       number,
       profilePicture,
+      barberId
     });
 
     res.json({ message: "Data inserted successfully" });
