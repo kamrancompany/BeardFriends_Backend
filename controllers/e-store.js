@@ -18,6 +18,23 @@ exports.getAllProducts = async (req, res, next) => {
     }
   };
   
+  exports.getSingleProduct = async (req, res, next) => {
+    try {
+      const productId = req.params.productId;
+  
+      // Find the product by its ID
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+  
+      res.status(200).json({ product });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  };
+  
   // ================================================ Add a new product================================================
   exports.addProduct = async (req, res, next) => {
     try {
@@ -162,6 +179,23 @@ exports.createOrder = async (req, res, next) => {
 };
 
 
+// ========================================================= getOrder's ================================================
+exports.getSingleOrderDetails = async (req, res, next) => {
+  try {
+    const orderId = req.params.orderId;
+
+    // Find the order by its ID
+    const order = await Order.findById(orderId).populate("products.productId");
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.status(200).json({ order });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
 
 
 

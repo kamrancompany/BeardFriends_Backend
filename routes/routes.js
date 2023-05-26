@@ -87,13 +87,17 @@ const{
   updateStock,
     // e-commerce 
 
-    addProduct,
-    getAllProducts,
+   
     getAllOrders,
     getCurrentOrders,
+
+    addProduct,
+    getAllProducts,
+    getSingleProduct,
     addToCart,
     addToWishlist,
-    createOrder
+    createOrder,
+    getSingleOrderDetails
 
 }=require('../controllers/e-store')
 
@@ -136,8 +140,13 @@ router.post("/addToCart", addToCart);
 router.post("/wishlist", addToWishlist);
 router.post("/orders", createOrder);
 router.get("/orders", getAllOrders);
+router.get("/products/:productId", getSingleProduct);
+
+
+router.get("/ordersDetail/:orderId", getSingleOrderDetails);
+
 router.get("/orders/current", getCurrentOrders);
-router.get("/products/:product_id", getRatingPro);
+router.get("/productRating/:product_id", getRatingPro);
 router.put("/updateProducts/:product_id", updateProduct);
 router.put("/updateStocks/:product_id", updateStock);
 
