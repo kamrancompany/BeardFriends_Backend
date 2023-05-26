@@ -10,16 +10,22 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/')
   },
   filename: function (req, file, cb) {
-    cb(null,Date.now() + file.fieldname)
+    const fileExtension = file.originalname.split('.').pop();
+    const allowedExtensions = ['jpg', 'jpeg', 'png'];
+    if (allowedExtensions.includes(fileExtension)) {
+      cb(null, Date.now() + '_' + file.fieldname + '.' + fileExtension);
+    } else {
+      cb(new Error('Invalid file type. Only JPG, JPEG, and PNG files are allowed.'));
+    }
   }
-})
+});
 
 const upload = multer({ storage: storage })
 
 // =================================================== Multer End =========================================================
 
 
-// ::::::::::::: Barber's Routers::::::::::::::::::::::::::::::::::::::
+// ::::::::::::: Barber's Routers ::::::::::::::::::::::::::::::::::::::
 const router=express.Router()
 const {
         register,
@@ -34,7 +40,7 @@ const {
   } = require('../controllers/barbercontroller');
 
 
-// ::::::::::::: Member's Routers::::::::::::::::::::::::::::::::::::::
+// ::::::::::::: Member's Routers ::::::::::::::::::::::::::::::::::::::
 
   const {
         registerMember,
@@ -57,30 +63,49 @@ const {
         getRegisteredBarbers,
         getDigitalStampCount,
 
-        // e-commerce 
-
-        addProduct,
-        getAllProducts,
-        getAllOrders,
-        getCurrentOrders,
+      
+        getRatingPro,
+        postRatingPro,
+      
 
         // Deletion & Restriction
         deleteUser,
         deleteBarber,
         // deleteBarberProfile,
-        restrictUser
+        restrictUser,
+
+        // constest 
+        contestSet,
+        contestUpdate
 }=require('../controllers/admin')
 
+
+// ==================   store
+
+const{
+  updateProduct,
+  updateStock,
+    // e-commerce 
+
+    addProduct,
+    getAllProducts,
+    getAllOrders,
+    getCurrentOrders,
+    addToCart,
+    addToWishlist,
+    createOrder
+
+}=require('../controllers/e-store')
 
   //Barber Api's routes
   router.post('/register', register);
   router.post('/login', login);
   router.post('/resetpswd', resetPassword);
   router.post('/addnewpswd/:resetToken', addNewPswd);
-  router.post('/setBarberPro',upload.single('profilePicture'), setProfileDetails)
-  router.post('/setShopDetails', setShopDetails)
-  router.post('/setOpen&ClosingTime', setOpenClosetime)
-  router.post('/setPrice', setPricing)
+  router.post('/setBarberPro',upload.single('profilePicture'),protect, setProfileDetails)
+  router.post('/setShopDetails',protect, setShopDetails)
+  router.post('/setOpen&ClosingTime',protect, setOpenClosetime)
+  router.post('/setPrice',protect, setPricing)
   
 
   //Member Api's routes
@@ -94,18 +119,27 @@ const {
   router.post('/adminLogin', adminLogin);
   router.post('/adminForgetPswd', adminForgetPswd);
   router.post('/adminResetPswd/:resetToken', adminResetPswd);
-  router.post('/adminSetProf',upload.single('profilePicture'), adminSetProf)
+  router.post('/adminSetProf',upload.single('profilePicture'),  adminSetProf)
   router.get('/getActive', getActiveBarbers);
   router.get('/getRegistered', getRegisteredBarbers);
   router.get('/getDigStamCount', getDigitalStampCount);
+  router.post('/contestSet', contestSet);
+  router.put('/contests/:id', contestUpdate);
 
 
   //Ecommerce Api's Routes
 
 router.get("/products", getAllProducts);
 router.post("/products", upload.array("photos"), addProduct);
+router.post("/products/:product_id", postRatingPro);
+router.post("/addToCart", addToCart);
+router.post("/wishlist", addToWishlist);
+router.post("/orders", createOrder);
 router.get("/orders", getAllOrders);
 router.get("/orders/current", getCurrentOrders);
+router.get("/products/:product_id", getRatingPro);
+router.put("/updateProducts/:product_id", updateProduct);
+router.put("/updateStocks/:product_id", updateStock);
 
 router.delete("/users/:memberId", deleteUser);
 router.delete("/barbers/:BarberId", deleteBarber);

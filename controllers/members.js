@@ -6,95 +6,10 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const multer = require('multer')
 
+const { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail }= require( '../mail/mails');
+
 const { validationResult } = require('express-validator');
 
-
-// =========================================Verfication Email =========================================================
-
-const sendVerificationEmail = async (user) => {
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    auth: {
-      user: 'sean.witting@ethereal.email',
-      pass: 'HXq4K4rbAFrzteKRbU'
-    }
-  });
-
-  const verificationLink = `https://yourwebsite.com/verify?token=${user.token}`;
-
-  const mailOptions = {
-    from: 'Suleman <sean.witting@ethereal.email>',
-    to: 'sallumia9090@gmail.com',
-    subject: 'Account Verification',
-    text: `Please click the following link to verify your account: ${verificationLink}`,
-  };
-
-  await transporter.sendMail(mailOptions);
-};
-
-// =========================================Verfication Email =========================================================
-
-
-
-
-//====================================== Function to send welcome email================================================
-
-const sendWelcomeEmail = async (user) => {
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    auth: {
-      user: 'sean.witting@ethereal.email',
-      pass: 'HXq4K4rbAFrzteKRbU'
-    }
-  });
-
-  // Prepare the email content
-  const mailOptions = {
-    from: '<sean.witting@ethereal.email>',
-    to: user.email,
-    subject: 'Welcome to Your Website',
-    text: `Welcome to Your Website Mister ${user.username}! We are excited to have you on board.`,
-  };
-
-  await transporter.sendMail(mailOptions);
-};
-
-//====================================== Function to send welcome email================================================
-
-
-
-//======================================Function to send password reset email==========================================
-
-
-const sendPasswordResetEmail = async (user) => {
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    auth: {
-      user: 'sean.witting@ethereal.email',
-      pass: 'HXq4K4rbAFrzteKRbU'
-    }
-  });
-
-  const resetToken = user.getResetPasswordToken(); // Generate a password reset token
-  const resetLink = ` <a href="http://localhost:3000/#/newpswd">http://localhost:3000/#//${resetToken}</a>`;
-
-  const mailOptions = {
-    from: '<sean.witting@ethereal.email>',
-    to: user.email,
-    subject: 'Password Reset',
-    text: `Please click the following link to reset your password`,
-    html: ` <a href="http://localhost:3000/#/newpswd">http://localhost:3000/#/resetpswd/${resetLink}</a>`
-  };
-
-  await transporter.sendMail(mailOptions);
-};
-
-//====================================== Function to send password reset email ==========================================
-
-                                        
 
 //========================================== Member's Registration Start======================================================
 

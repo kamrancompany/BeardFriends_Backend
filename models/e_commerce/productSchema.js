@@ -19,6 +19,18 @@ const productSchema = new mongoose.Schema({
       required: true,
     },
   ],
+  deliveryCharges: {
+    type: Number,
+    required: true,
+  },
+  freeDelivery: {
+    type: Boolean,
+    default: false,
+  },
+  stock: {
+    type: Number,
+    required: true,
+  },
 });
 
 const Product = mongoose.model("Product", productSchema);

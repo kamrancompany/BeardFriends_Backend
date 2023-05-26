@@ -4,10 +4,12 @@ const BarberProf = require('../models/barbermodels/barberProf');
 const User = require("../models/membersmodel/member");
 const Barber = require("../models/barbermodels/users");
 const BarberProfile=require('../models/barbermodels/barberProf')
+const Contest=require('../models/admin_model/contest')
 
 
 const Product = require("../models/e_commerce/productSchema");
 const Order = require("../models/e_commerce/orderSchema");
+const Rating = require("../models/e_commerce/ratingSchema");
 
 
 const bcrypt = require('bcrypt');
@@ -16,96 +18,10 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 const multer = require('multer')
+const { DateTime } = require('luxon');
 
+const { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail }= require( '../mail/mails');
 const { validationResult } = require('express-validator');
-
-
-// =========================================Verfication Email =========================================================
-
-const sendVerificationEmail = async (user) => {
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    auth: {
-      user: 'sean.witting@ethereal.email',
-      pass: 'HXq4K4rbAFrzteKRbU'
-    }
-  });
-
-  const verificationLink = `https://yourwebsite.com/verify?token=${user.token}`;
-
-  const mailOptions = {
-    from: 'Suleman <sean.witting@ethereal.email>',
-    to: 'sallumia9090@gmail.com',
-    subject: 'Account Verification',
-    text: `Please click the following link to verify your account: ${verificationLink}`,
-  };
-
-  await transporter.sendMail(mailOptions);
-};
-
-// =========================================Verfication Email =========================================================
-
-
-
-
-//====================================== Function to send welcome email================================================
-
-const sendWelcomeEmail = async (user) => {
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    auth: {
-      user: 'sean.witting@ethereal.email',
-      pass: 'HXq4K4rbAFrzteKRbU'
-    }
-  });
-
-  // Prepare the email content
-  const mailOptions = {
-    from: '<sean.witting@ethereal.email>',
-    to: user.email,
-    subject: 'Welcome to Your Website',
-    text: `Welcome to Your Website Mister ${user.username}! We are excited to have you on board.`,
-  };
-
-  await transporter.sendMail(mailOptions);
-};
-
-//====================================== Function to send welcome email================================================
-
-
-
-//======================================Function to send password reset email==========================================
-
-
-const sendPasswordResetEmail = async (user) => {
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    auth: {
-      user: 'sean.witting@ethereal.email',
-      pass: 'HXq4K4rbAFrzteKRbU'
-    }
-  });
-
-  const resetToken = user.getResetPasswordToken(); // Generate a password reset token
-  const resetLink = ` <a href="http://localhost:3000/#/newpswd">http://localhost:3000/#//${resetToken}</a>`;
-
-  const mailOptions = {
-    from: '<sean.witting@ethereal.email>',
-    to: user.email,
-    subject: 'Password Reset',
-    text: `Please click the following link to reset your password`,
-    html: ` <a href="http://localhost:3000/#/newpswd">http://localhost:3000/#/resetpswd/${resetLink}</a>`
-  };
-
-  await transporter.sendMail(mailOptions);
-};
-
-//====================================== Function to send password reset email ==========================================
-
-
 
 //========================================== Barber's Registration Start======================================================
 
@@ -328,72 +244,9 @@ exports.getDigitalStampCount = async (req, res, next) => {
 
 
 
-// ============================================================Get all products Api's====================================================
-exports.getAllProducts = async (req, res, next) => {
-  try {
-    const products = await Product.find();
-    res.json(products);
-  } catch (error) {
-    console.log(error);
-    next(error);
-  }
-};
-
-// ================================================ Add a new product================================================
-exports.addProduct = async (req, res, next) => {
-  try {
-    const { name, description, price } = req.body;
-    const photos = req.files.map(file => file.path);
-    
-    const product = await Product.create({
-      name,
-      description,
-      price,
-      photos,
-    });
-
-    console.log(product);
-    res.status(201).json({ message: "Product added successfully", product });
-  } catch (error) {
-    console.log(error);
-    next(error);
-  }
-};
 
 
-//============================================== Get all orders (grouped by year, month, day)=========================================
-exports.getAllOrders = async (req, res, next) => {
-  try {
-    const orders = await Order.aggregate([
-      {
-        $group: {
-          _id: {
-            year: { $year: "$date" },
-            month: { $month: "$date" },
-            day: { $dayOfMonth: "$date" },
-          },
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-    res.json(orders);
-  } catch (error) {
-    console.log(error);
-    next(error);
-  }
-};
 
-// ===================================================== Get current orders =================================================
-exports.getCurrentOrders = async (req, res, next) => {
-  try {
-    const currentDate = new Date();
-    const orders = await Order.find({ date: { $gte: currentDate } });
-    res.json(orders);
-  } catch (error) {
-    console.log(error);
-    next(error);
-  }
-};
 
 
 
@@ -448,7 +301,7 @@ exports.deleteBarber = async (req, res, next) => {
 
 
 
-// Restrict a user by ID
+// Restrict======================================== a user by ID========================================================
 exports.restrictUser = async (req, res, next) => {
   try {
     const { userId } = req.params;
@@ -462,3 +315,105 @@ exports.restrictUser = async (req, res, next) => {
     next(error);
   }
 }
+
+
+
+
+
+
+//================================================ Get ratings for a specific product =============================================
+exports.getRatingPro= async (req, res,next) => {
+  try {
+    const productRatings = await Rating.find({ product_id: req.params.product_id });
+    res.json(productRatings);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+    next(error)
+  }
+}
+
+
+//============================================== Add a new rating for a specific product =============================================
+exports.postRatingPro= async (req, res) => {
+  const { user_id, rating, feedback } = req.body;
+   
+  // Validate request data
+  if (!user_id || !rating) {
+    return res.status(400).json({ error: 'user_id and rating are required' });
+  }
+
+  try {
+    const newRating = await Rating.create({
+      product_id: req.params.product_id,
+      user_id,
+      rating,
+      feedback,
+      timestamp: new Date().toISOString(),
+    });
+
+    res.status(201).json(newRating);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+
+//========================================================== contest setting =================================================
+
+exports.contestSet= async(req,res,next)=>{
+  const { startDate, endDate } = req.body;
+
+  // Validate input data
+  if (!startDate || !endDate) {
+    return res.status(400).json({ message: 'Incomplete contest details' });
+  }
+
+  // Convert start and end dates to DateTime objects
+  const startDateTime = DateTime.fromISO(startDate);
+  const endDateTime = DateTime.fromISO(endDate);
+
+  // Create a new contest instance
+  const contest = new Contest({
+    startDate: startDateTime.toJSDate(),
+    endDate: endDateTime.toJSDate()
+  });
+
+  // Save the contest to the database
+  contest.save()
+    .then(() => {
+      res.status(201).json({ message: 'Contest created successfully',contest });
+    })
+    .catch((error) => {
+      res.status(500).json({ message: 'Failed to create contest', error });
+    });
+}
+
+//============================================================= update contest api ==========================================
+exports.contestUpdate= async(req,res,next)=> {
+  const { id } = req.params;
+  const { startDate, endDate } = req.body;
+
+  // Validate input data
+  if (!startDate || !endDate) {
+    return res.status(400).json({ message: 'Incomplete contest details' });
+  }
+
+  // Convert start and end dates to DateTime objects
+  const startDateTime = DateTime.fromISO(startDate);
+  const endDateTime = DateTime.fromISO(endDate);
+
+  // Find and update the contest in the database
+ const contest = Contest.findByIdAndUpdate(id, {
+    startDate: startDateTime.toJSDate(),
+    endDate: endDateTime.toJSDate()
+  })
+    .then(() => {
+      res.status(200).json({ message: 'Contest updated successfully', contest});
+    })
+    .catch((error) => {
+      res.status(500).json({ message: 'Failed to update contest', error });
+      next(error)
+    });
+};
+
+//========================================================== contest setting =================================================
