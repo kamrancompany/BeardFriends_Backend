@@ -1,7 +1,6 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -20,8 +19,19 @@
     "jsonwebtoken": "^9.0.0",
     "luxon": "^3.3.0",
     "mongoose": "^7.1.1",
+    "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.2",
     "nodemon": "^2.0.22",
     "validate": "^5.2.0"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SalluMia/BeardFriends_Backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SalluMia/BeardFriends_Backend/issues"
+  },
+  "homepage": "https://github.com/SalluMia/BeardFriends_Backend#readme",
+  "description": ""
 }
