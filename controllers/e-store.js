@@ -1,65 +1,79 @@
-
-
 const Product = require("../models/e_commerce/productSchema");
 const Order = require("../models/e_commerce/orderSchema");
 const User = require("../models/membersmodel/member");
 const Cart = require("../models/e_commerce/cart");
+const Rating = require("../models/e_commerce/ratingSchema");
 const Wishlist = require("../models/e_commerce/wishlist");
 
 
 // ============================================================Get all products Api's====================================================
 exports.getAllProducts = async (req, res, next) => {
-    try {
-      const products = await Product.find();
-      res.json(products);
-    } catch (error) {
-      console.log(error);
-      next(error);
-    }
-  };
-  
-  exports.getSingleProduct = async (req, res, next) => {
-    try {
-      const productId = req.params.productId;
-  
-      // Find the product by its ID
-      const product = await Product.findById(productId);
-      if (!product) {
-        return res.status(404).json({ message: "Product not found" });
+  try {
+    const products = await Product.find().populate({
+      path: "ratings",
+      populate: {
+        path: "user_id",
+        model: "Members"
       }
-  
-      res.status(200).json({ product });
-    } catch (error) {
-      console.log(error);
-      next(error);
+    });
+    res.json(products);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+exports.getSingleProduct = async (req, res, next) => {
+  try {
+    const productId = req.params.productId;
+
+    // Find the product by its ID
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
     }
-  };
-  
-  // ================================================ Add a new product================================================
-  exports.addProduct = async (req, res, next) => {
-    try {
-      const { name, description, price, deliveryCharges, freeDelivery, stock } = req.body;
-      const photos = req.files.map(file => file.path);
-      
-      const product = await Product.create({
-        name,
-        description,
-        price,
-        photos,
-        deliveryCharges,
-        freeDelivery,
-        stock,
-      });
-  
-      console.log(product);
-      res.status(201).json({ message: "Product added successfully", product });
-    } catch (error) {
-      console.log(error);
-      next(error);
-    }
-  };
-  
-  
+
+    // Find the ratings for the product
+    const ratings = await Rating.find({ product_id: productId });
+
+    res.status(200).json({ product, ratings });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+
+
+
+
+
+// ================================================ Add a new product================================================
+exports.addProduct = async (req, res, next) => {
+  try {
+    const { name, description, price, deliveryCharges, freeDelivery, stock } = req.body;
+    const photos = req.files.map(file => file.path);
+
+    const product = await Product.create({
+      name,
+      description,
+      price,
+      photos,
+      deliveryCharges,
+      freeDelivery,
+      stock,
+    });
+
+    console.log(product);
+    res.status(201).json({ message: "Product added successfully", product });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+
 //==================================================== Cart code =======================================================
 
 exports.addToCart = async (req, res, next) => {
@@ -201,102 +215,102 @@ exports.getSingleOrderDetails = async (req, res, next) => {
 
 
 
-  // ====================================================  update products =========================================
-  exports.updateProduct = async (req, res, next) => {
-    try {
-      const { product_id } = req.params;
-      const { name, description, price, deliveryCharges, freeDelivery, stock } = req.body;
-      
-      const updatedProduct = await Product.findOneAndUpdate(
-        {_id:product_id}
-        ,
-        {
-          $set: {
-            name,
-            description,
-            price,
-            deliveryCharges,
-            freeDelivery,
-            stock,
-          },
+// ====================================================  update products =========================================
+exports.updateProduct = async (req, res, next) => {
+  try {
+    const { product_id } = req.params;
+    const { name, description, price, deliveryCharges, freeDelivery, stock } = req.body;
+
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: product_id }
+      ,
+      {
+        $set: {
+          name,
+          description,
+          price,
+          deliveryCharges,
+          freeDelivery,
+          stock,
         },
-        { new: true }
-      );
-  
-      if (!updatedProduct) {
-        return res.status(404).json({ message: "Product not found" });
-      }
-  
-      console.log(updatedProduct);
-      res.status(200).json({ message: "Product updated successfully", product: updatedProduct });
-    } catch (error) {
-      console.log(error);
-      next(error);
+      },
+      { new: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Product not found" });
     }
-  };
-  
-  //========================================================== update stock ===============================================
-  exports.updateStock = async (req, res, next) => {
-    try {
-      const { product_id } = req.params;
-      const { stock } = req.body;
-     
-      console.log(product_id);
-      const updatedProduct = await Product.findOneAndUpdate({
-        _id:product_id},
-        { 
-          stock: stock
-         },
-         {
-          new:true
-         }
-      );
-  
-      if (!updatedProduct) {
-        return res.status(404).json({ message: "Product not found" });
+
+    console.log(updatedProduct);
+    res.status(200).json({ message: "Product updated successfully", product: updatedProduct });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+//========================================================== update stock ===============================================
+exports.updateStock = async (req, res, next) => {
+  try {
+    const { product_id } = req.params;
+    const { stock } = req.body;
+
+    console.log(product_id);
+    const updatedProduct = await Product.findOneAndUpdate({
+      _id: product_id
+    },
+      {
+        stock: stock
+      },
+      {
+        new: true
       }
-  
-      console.log(updatedProduct);
-      res.status(200).json({ message: "Stock updated successfully", product: updatedProduct });
-    } catch (error) {
-      console.log(error);
-      next(error);
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Product not found" });
     }
-  };
-  
-  
-  //============================================== Get all orders (grouped by year, month, day)=========================================
-  exports.getAllOrders = async (req, res, next) => {
-    try {
-      const orders = await Order.aggregate([
-        {
-          $group: {
-            _id: {
-              year: { $year: "$date" },
-              month: { $month: "$date" },
-              day: { $dayOfMonth: "$date" },
-            },
-            count: { $sum: 1 },
+
+    console.log(updatedProduct);
+    res.status(200).json({ message: "Stock updated successfully", product: updatedProduct });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+
+//============================================== Get all orders (grouped by year, month, day)=========================================
+exports.getAllOrders = async (req, res, next) => {
+  try {
+    const orders = await Order.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: "$date" },
+            month: { $month: "$date" },
+            day: { $dayOfMonth: "$date" },
           },
+          count: { $sum: 1 },
         },
-      ]);
-      res.json(orders);
-    } catch (error) {
-      console.log(error);
-      next(error);
-    }
-  };
-  
-  // ===================================================== Get current orders =================================================
-  exports.getCurrentOrders = async (req, res, next) => {
-    try {
-      const currentDate = new Date();
-      const orders = await Order.find({ date: { $gte: currentDate } });
-      res.json(orders);
-    } catch (error) {
-      console.log(error);
-      next(error);
-    }
-  };
-  
-  
+      },
+    ]);
+    res.json(orders);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+// ===================================================== Get current orders =================================================
+exports.getCurrentOrders = async (req, res, next) => {
+  try {
+    const currentDate = new Date();
+    const orders = await Order.find({ date: { $gte: currentDate } });
+    res.json(orders);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+

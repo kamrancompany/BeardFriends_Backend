@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
 
-// Define the Rating schema
+const mongoose = require("mongoose");
+
 const ratingSchema = new mongoose.Schema({
   product_id: {
     type: mongoose.Schema.Types.ObjectId,
@@ -25,7 +25,6 @@ const ratingSchema = new mongoose.Schema({
   },
 });
 
-// Create the Rating model
 const Rating = mongoose.model('Rating', ratingSchema);
 
 module.exports = Rating;

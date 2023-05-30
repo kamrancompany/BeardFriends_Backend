@@ -76,7 +76,10 @@ const {
 
         // constest 
         contestSet,
-        contestUpdate
+        contestUpdate,
+        addStaff,
+        setPasswordStaff
+
 }=require('../controllers/admin')
 
 
@@ -123,6 +126,7 @@ const{
   router.post('/adminLogin', adminLogin);
   router.post('/adminForgetPswd', adminForgetPswd);
   router.post('/adminResetPswd/:resetToken', adminResetPswd);
+  router.post('/addStaff/', addStaff);
   router.post('/adminSetProf',upload.single('profilePicture'),  adminSetProf)
   router.get('/getActive', getActiveBarbers);
   router.get('/getRegistered', getRegisteredBarbers);
@@ -130,6 +134,7 @@ const{
   router.post('/contestSet', contestSet);
   router.put('/contests/:id', contestUpdate);
 
+  router.post('/staff/set-password', setPasswordStaff);
 
   //Ecommerce Api's Routes
 

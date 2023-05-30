@@ -1,7 +1,12 @@
 const mongoose = require("mongoose");
 
 const shopDetailsSchema = new mongoose.Schema(
-  {
+  { 
+     barberId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Barbers',
+    required: true
+  },
     shopName: {
       type: String,
       required: [true, "Please provide a shop name"],

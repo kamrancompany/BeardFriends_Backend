@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const PrincingSchema = new mongoose.Schema(
   {
+    barberId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Barbers',
+      required: true
+    },
     price: {
         type: Number,
         required: true,

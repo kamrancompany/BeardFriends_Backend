@@ -200,7 +200,7 @@ exports.setProfileDetails = async (req, res, next) => {
 
 exports.setShopDetails = async (req, res, next) => {
   try {
-    const { shopName, shopEmail, shopPhone, shopAddress, shopSits, staffMembers, About } = req.body;
+    const { shopName, shopEmail, shopPhone, shopAddress, shopSits, staffMembers, About,barberId } = req.body;
     const shop = await ShopDetails.create({
       shopName,
       shopEmail,
@@ -208,7 +208,8 @@ exports.setShopDetails = async (req, res, next) => {
       shopAddress,
       shopSits,
       staffMembers,
-      About
+      About,
+      barberId
     });
 
     res.json({ shop });
@@ -249,3 +250,9 @@ exports.setPricing = async (req, res, next) => {
 }
 
 // ============================================ Set Braber Profile Api ==========================================================
+
+
+
+
+
+

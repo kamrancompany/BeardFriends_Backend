@@ -4,6 +4,10 @@ const BarberProf = require('../models/barbermodels/barberProf');
 const User = require("../models/membersmodel/member");
 const Barber = require("../models/barbermodels/users");
 const BarberProfile=require('../models/barbermodels/barberProf')
+const BarberShop=require('../models/barbermodels/shopDetails')
+const BarberTime=require('../models/barbermodels/openingTimeSchema')
+const BarberPricing=require('../models/barbermodels/pricing&lang')
+const Staff=require('../models/admin_model/staff')
 const Contest=require('../models/admin_model/contest')
 
 
@@ -20,7 +24,7 @@ const mongoose = require('mongoose');
 const multer = require('multer')
 const { DateTime } = require('luxon');
 
-const { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail }= require( '../mail/mails');
+const { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail, sendAddStaffPswd }= require( '../mail/mails');
 const { validationResult } = require('express-validator');
 
 //========================================== Barber's Registration Start======================================================
@@ -45,7 +49,7 @@ exports.adminRegister = async (req, res, next) => {
       cpassword,
     });
 
-    await sendVerificationEmail(user);
+    // await sendVerificationEmail(user);
 
     const token = user.getSignedToken(); // Create a token using the getSignedToken method
     res.status(201).json({ message: "User registered successfully", token });
@@ -289,6 +293,11 @@ exports.deleteBarber = async (req, res, next) => {
           // Delete the barber's profile as well
           await BarberProfile.deleteOne({ barberId: BarberId });
 
+          await BarberShop.deleteOne({barberId: BarberId });
+          await BarberTime.deleteOne({barberId: BarberId });
+          await BarberPricing.deleteOne({barberId: BarberId });
+
+
           res.status(200).json({ message: "Barber and profile deleted successfully" });
 
 
@@ -334,15 +343,19 @@ exports.getRatingPro= async (req, res,next) => {
 
 
 //============================================== Add a new rating for a specific product =============================================
-exports.postRatingPro= async (req, res) => {
+exports.postRatingPro = async (req, res) => {
   const { user_id, rating, feedback } = req.body;
-   
-  // Validate request data
-  if (!user_id || !rating) {
-    return res.status(400).json({ error: 'user_id and rating are required' });
-  }
 
   try {
+    const existingRating = await Rating.findOne({
+      product_id: req.params.product_id,
+      user_id: user_id
+    });
+
+    if (existingRating) {
+      return res.status(400).json({ error: 'User has already rated the product' });
+    }
+
     const newRating = await Rating.create({
       product_id: req.params.product_id,
       user_id,
@@ -355,7 +368,8 @@ exports.postRatingPro= async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
-}
+};
+
 
 
 //========================================================== contest setting =================================================
@@ -417,3 +431,63 @@ exports.contestUpdate= async(req,res,next)=> {
 };
 
 //========================================================== contest setting =================================================
+
+// ====================================================== Add Staff Api =========================================================
+
+
+exports.addStaff = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    // Check if staff email already exists
+    const existingStaff = await Staff.findOne({ email });
+    if (existingStaff) {
+      return res.status(400).json({ message: 'Staff email already exists' });
+    }
+
+    // Create a new staff member
+    const staff = new Staff({ email });
+    await staff.save();
+    
+    
+
+    await sendAddStaffPswd(staff);
+
+    const token = staff.getSignedToken(); // Create a token using the getSignedToken method
+    res.status(201).json({ message: "User registered successfully",token });
+
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+
+exports.setPasswordStaff = async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+
+    // Find the staff member with the given token
+    const staff = await Staff.findOne({ addPasswordToken: token });
+    if (!staff) {
+      return res.status(400).json({ message: 'Invalid token' });
+    }
+
+    // Check if the token has expired
+    if (staff.resetPasswordExpire < Date.now()) {
+      return res.status(400).json({ message: 'Token has expired' });
+    }
+
+    // Set the new password
+    staff.password = password;
+    staff.addPasswordToken = undefined;
+    staff.resetPasswordExpire = undefined;
+    await staff.save();
+
+    res.status(200).json({ message: 'Password set successfully' });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
