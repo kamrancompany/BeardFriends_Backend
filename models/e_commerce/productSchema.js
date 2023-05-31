@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema({
-  // ratings: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Rating' }],
+  ratings: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Rating' }],
   name: {
     type: String,
     required: true,

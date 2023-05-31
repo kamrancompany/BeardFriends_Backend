@@ -9,8 +9,8 @@ const Wishlist = require("../models/e_commerce/wishlist");
 // ============================================================Get all products Api's====================================================
 exports.getAllProducts = async (req, res, next) => {
   try {
-    // const products = await Product.find().populate({ path: 'ratings', options: { strictPopulate: false } });
-    const products = await Product.find()
+    const products = await Product.find().populate({ path: 'ratings', options: { strictPopulate: false } });
+    // const products = await Product.find()
     res.json(products);
   } catch (error) {
     console.log(error);
