@@ -95,8 +95,8 @@ const nodemailer = require('nodemailer');
       host: 'smtp.ethereal.email',
       port: 587,
       auth: {
-        user: 'henderson.jast13@ethereal.email',
-        pass: 'gNa5b3gUEuZMr9fFZ4'
+        user: 'jaylin.will88@ethereal.email',
+        pass: 'MQUyA16qRNmeggb5pf'
       }
     });
   

@@ -65,18 +65,23 @@ const {
 
       
         getRatingPro,
+        getAllRatings,
         postRatingPro,
       
 
         // Deletion & Restriction
         deleteUser,
         deleteBarber,
-        // deleteBarberProfile,
-        restrictUser,
+       
+        blockBarber,
+        unblockBarber,
+        blockMember,
+        unblockMember,
 
         // constest 
         contestSet,
         contestUpdate,
+        getContest,
         addStaff,
         setPasswordStaff
 
@@ -127,12 +132,20 @@ const{
   router.post('/adminForgetPswd', adminForgetPswd);
   router.post('/adminResetPswd/:resetToken', adminResetPswd);
   router.post('/addStaff/', addStaff);
-  router.post('/adminSetProf',upload.single('profilePicture'),  adminSetProf)
+  router.post('/adminSetProf',upload.single('profilePicture'), adminSetProf)
   router.get('/getActive', getActiveBarbers);
   router.get('/getRegistered', getRegisteredBarbers);
   router.get('/getDigStamCount', getDigitalStampCount);
   router.post('/contestSet', contestSet);
+  router.get('/contest', getContest);
   router.put('/contests/:id', contestUpdate);
+
+  // block or restrict user
+  router.put('/blockMember/:userId', blockMember);
+  router.put('/unblockMember/:userId', unblockMember);  
+  
+  router.put('/blockBarber/:userId', blockBarber);
+  router.put('/unblockBarber/:userId', unblockBarber);
 
   router.post('/staff/set-password', setPasswordStaff);
 
@@ -152,12 +165,14 @@ router.get("/ordersDetail/:orderId", getSingleOrderDetails);
 
 router.get("/orders/current", getCurrentOrders);
 router.get("/productRating/:product_id", getRatingPro);
+router.get('/ratings/:product_id',getAllRatings);
+
 router.put("/updateProducts/:product_id", updateProduct);
 router.put("/updateStocks/:product_id", updateStock);
 
 router.delete("/users/:memberId", deleteUser);
 router.delete("/barbers/:BarberId", deleteBarber);
 // router.delete("/barbersProfile/:barberProfileId", deleteBarberProfile);
-router.put("/users/:userId/restrict", restrictUser);
+// router.put("/users/:userId/restrict", restrictUser);
 
   module.exports = router;

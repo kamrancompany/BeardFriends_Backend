@@ -5,6 +5,10 @@ const crypto = require("crypto");
 
 const memberSchema = mongoose.Schema(
   {
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
     username: {
       type: String,
       required: [true, "Please provide a username"],

@@ -24,7 +24,6 @@
     "nodemon": "^2.0.22",
     "validate": "^5.2.0"
   },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SalluMia/BeardFriends_Backend.git"

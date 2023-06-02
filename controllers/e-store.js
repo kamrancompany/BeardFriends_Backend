@@ -45,9 +45,10 @@ exports.getSingleProduct = async (req, res, next) => {
 
 
 // ================================================ Add a new product================================================
+
 exports.addProduct = async (req, res, next) => {
   try {
-    const { name, description, price, deliveryCharges, freeDelivery, stock } = req.body;
+    const { name, description, price, deliveryCharges, freeDelivery, stock,category } = req.body;
     const photos = req.files.map(file => file.path);
 
     const product = await Product.create({
@@ -58,6 +59,7 @@ exports.addProduct = async (req, res, next) => {
       deliveryCharges,
       freeDelivery,
       stock,
+      category
     });
 
     console.log(product);
