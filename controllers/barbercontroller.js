@@ -3,6 +3,8 @@ const barberProff = require('../models/barbermodels/barberProf');
 const ShopDetails = require('../models/barbermodels/shopDetails');
 const time = require('../models/barbermodels/openingTimeSchema');
 const price = require('../models/barbermodels/pricing&lang');
+const Participation = require('../models/barbermodels/participants');
+const fs = require('fs');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -254,5 +256,143 @@ exports.setPricing = async (req, res, next) => {
 
 
 
+exports.participateInContest = async (req, res, next) => {
+  try {
+    const { barberId } = req.body;
+    const picture = req.file.path;
 
+    // Check if the barber has already participated
+    const existingParticipation = await Participation.findOne({ barberId });
+    if (existingParticipation) {
+      return res.status(400).json({ message: "Barber has already participated" });
+    }
+
+    // Create a new participation record
+    const participation = await Participation.create({
+      barberId,
+      picture,
+      votes: 0
+    });
+
+    res.status(200).json({ message: "Participation created successfully", participation });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+exports.getParticipants = async (req, res, next) => {
+  try {
+    const participants = await Participation.find({}, 'picture votes')
+      .populate('barberId', 'email');
+    res.status(200).json({ participants });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+
+
+
+
+exports.deleteParticipantPhoto = async (req, res, next) => {
+  try {
+    const { barberId } = req.params;
+
+    // Find the participation record by barberId
+    const participation = await Participation.findOne({ barberId });
+    if (!participation) {
+      return res.status(404).json({ message: "Participation not found" });
+    }
+
+    // Delete the participant's photo
+    const photoPath = participation.picture;
+    fs.unlink(photoPath, (err) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).json({ message: "Failed to delete photo" });
+      }
+      console.log("Photo deleted successfully");
+    });
+
+    // Remove the participation record
+    await Participation.deleteOne({ barberId });
+
+    res.status(200).json({ message: "Participant photo deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+
+
+exports.blockParticipant = async (req, res, next) => {
+  try {
+    const { participantId } = req.params;
+
+    // Find the participant by ID
+    const participant = await Participation.findById(participantId);
+    if (!participant) {
+      return res.status(404).json({ message: 'Participant not found' });
+    }
+
+    // Block the participant
+    participant.isBlocked = true;
+    await participant.save();
+
+    res.status(200).json({ message: 'Participant blocked successfully', participant });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+exports.unblockParticipant = async (req, res, next) => {
+  try {
+    const { participantId } = req.params;
+
+    // Find the participant by ID
+    const participant = await Participation.findById(participantId);
+    if (!participant) {
+      return res.status(404).json({ message: 'Participant not found' });
+    }
+
+    // Unblock the participant
+    participant.isBlocked = false;
+    await participant.save();
+
+    res.status(200).json({ message: 'Participant unblocked successfully', participant });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+
+exports.deleteParticipant = async (req, res, next) => {
+  try {
+    const { participantId } = req.params;
+
+    // Find the participant by ID
+    const participant = await Participation.findById(participantId);
+
+    // If participant does not exist
+    if (!participant) {
+      return res.status(404).json({ message: 'Participant not found' });
+    }
+
+    // Delete the participant's picture file from the server
+    // fs.unlinkSync(participant.picture);
+
+    // Delete the participant from the database
+    await Participation.deleteOne({ _id: participantId });
+
+    res.status(200).json({ message: 'Participant deleted successfully' });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
 

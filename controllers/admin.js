@@ -1,35 +1,45 @@
-const Admin = require('../models/admin_model/admin');
-const AdminProf = require('../models/admin_model/adminProfile');
-const DigitalStamp = require('../models/membersmodel/digitalStamp');
-const BarberProf = require('../models/barbermodels/barberProf');
+const Admin = require("../models/admin_model/admin");
+const AdminProf = require("../models/admin_model/adminProfile");
+const DigitalStamp = require("../models/membersmodel/digitalStamp");
+const BarberProf = require("../models/barbermodels/barberProf");
 const User = require("../models/membersmodel/member");
 const Barber = require("../models/barbermodels/users");
-const BarberProfile=require('../models/barbermodels/barberProf')
-const BarberShop=require('../models/barbermodels/shopDetails')
-const BarberTime=require('../models/barbermodels/openingTimeSchema')
-const BarberPricing=require('../models/barbermodels/pricing&lang')
-const Staff=require('../models/admin_model/staff')
-const Contest=require('../models/admin_model/contest')
+const BarberProfile = require("../models/barbermodels/barberProf");
+const BarberShop = require("../models/barbermodels/shopDetails");
+const BarberTime = require("../models/barbermodels/openingTimeSchema");
+const BarberPricing = require("../models/barbermodels/pricing&lang");
+const Staff = require("../models/admin_model/staff");
+const Contest = require("../models/admin_model/contest");
+const Participation = require('../models/barbermodels/participants');
 
+
+
+
+// otp and resetemail
+const otpmodel=require("../models/admin_model/otp");
+const { sendEmailWithOTP, generateOTP } = require("../mail/pswdResetMail");
 
 const Product = require("../models/e_commerce/productSchema");
 const Order = require("../models/e_commerce/orderSchema");
 const Rating = require("../models/e_commerce/ratingSchema");
 
-
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-const mongoose = require('mongoose');
-const multer = require('multer')
-const { DateTime } = require('luxon');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
+const mongoose = require("mongoose");
+const multer = require("multer");
+const { DateTime } = require("luxon");
 const bcryptjs = require("bcryptjs");
 
-
-const { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail, sendAddStaffPswd }= require( '../mail/mails');
-const { validationResult } = require('express-validator');
-const barber = require('../models/barbermodels/users');
+const {
+  sendVerificationEmail,
+  sendWelcomeEmail,
+  sendPasswordResetEmail,
+  sendAddStaffPswd,
+} = require("../mail/mails");
+const { validationResult } = require("express-validator");
+const barber = require("../models/barbermodels/users");
 
 //========================================== Barber's Registration Start======================================================
 
@@ -56,7 +66,9 @@ exports.adminRegister = async (req, res, next) => {
     // await sendVerificationEmail(user);
 
     const token = user.getSignedToken(); // Create a token using the getSignedToken method
-    res.status(201).json({ message: "User registered successfully", token, user });
+    res
+      .status(201)
+      .json({ message: "User registered successfully", token, user });
   } catch (error) {
     console.log(error);
     next(error);
@@ -65,8 +77,37 @@ exports.adminRegister = async (req, res, next) => {
 
 //========================================== Barber's Registration Ending =====================================================
 
-
 //========================================== Barber's Login Start ======================================================
+
+// exports.adminLogin = async (req, res, next) => {
+//   const { email, password } = req.body;
+
+//   // Validate input fields
+//   const errors = validationResult(req);
+//   if (!errors.isEmpty()) {
+//     return next(errors.array());
+//   }
+
+//   try {
+//     const user = await Admin.findOne({ email }).select('+password');
+//     if (!user) {
+//       return next('Invalid Credentials');
+//     }
+//     const isMatch = await user.matchPasswords(password);
+//     if (!isMatch) {
+//       return next('Invalid Credentials');
+//     }
+//     // await sendWelcomeEmail(user); // Send the welcome email
+
+//     const token = user.getSignedToken(); // Create a token using the getSignedToken method
+//     res.status(200).json({ message: 'User logged in Successfully', token, user });
+//     res.json(token);
+
+//   } catch (error) {
+//     console.log(error);
+//     next(error);
+//   }
+// };
 
 exports.adminLogin = async (req, res, next) => {
   const { email, password } = req.body;
@@ -78,129 +119,127 @@ exports.adminLogin = async (req, res, next) => {
   }
 
   try {
-    const user = await Admin.findOne({ email }).select('+password');
+    const user = await Admin.findOne({ email }).select("+password");
     if (!user) {
-      return next('Invalid Credentials');
+      return next("Invalid Credentials");
     }
     const isMatch = await user.matchPasswords(password);
     if (!isMatch) {
-      return next('Invalid Credentials');
+      return next("Invalid Credentials");
     }
-    await sendWelcomeEmail(user); // Send the welcome email
 
-    const token = user.getSignedToken(); // Create a token using the getSignedToken method
-    res.status(200).json({ message: 'User logged in Successfully', token, user });
-    res.json(token);
+    const role = user.role;
 
+    if (role === "admin") {
+      const token = user.getSignedToken();
+      return res
+        .status(200)
+        .json({ message: "Admin logged in successfully", user, token });
+    } else if (role === "staff") {
+      // Handle staff login logic here
+      // ...
+      return res
+        .status(200)
+        .json({ message: "Staff logged in successfully", user });
+    } else {
+      return next("Invalid Role");
+    }
   } catch (error) {
     console.log(error);
     next(error);
   }
 };
-
-//========================================== Barber's Login Start ======================================================
-
-
-
-//========================================== Barber's Forget PSWD/Reset PSWD Start ======================================================
-
-exports.adminForgetPswd = async (req, res, next) => {
+// Controller method to handle admin password reset
+// sendOTP controller
+exports.sendOTP = async (req, res, next) => {
   const { email } = req.body;
-
-  // Validate input fields
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return next(errors.array());
-  }
 
   try {
     const user = await Admin.findOne({ email });
     if (!user) {
-      return next('User not found');
+      return next("User not found");
     }
 
-    // Generate a password reset token and save it to the user
-    const resetToken = user.getResetPasswordToken();
-    console.log(resetToken);
-    await user.save();
+    const otpcode = generateOTP();
+    const otpdata = new otpmodel({
+      email: req.body.email,
+      code: otpcode,
+      expireIn: new Date().getTime() + 300 * 1000,
+    });
 
-    // Send the password reset email
-    await sendPasswordResetEmail(user);
+    const otpResponce = await otpdata.save();
 
-    res.status(200).json({ message: 'Password reset email sent', resetToken });
-    res.json(resetToken);
+    sendEmailWithOTP(email, otpcode);
+    res.status(200).json({ message: "OTP sent successfully", email, otpResponce });
   } catch (error) {
     console.log(error);
     next(error);
   }
 };
 
-//========================================== Barber's Forget PSWD/Reset PSWD End ======================================================
 
-
-
-
-//========================================== Barber's Forget & Addig New PSWD Start ======================================================
-
-exports.adminResetPswd = async (req, res, next) => {
-  const { password } = req.body;
-  const { cpassword } = req.body;
-  const { resetToken } = req.params;
-  if (!password || !cpassword) {
-    res.status(400);
-    return next(new Error("Please provide new password"));
-  }
-
-  const resetPasswordToken = crypto
-    .createHash("sha256")
-    .update(req.params.resetToken)
-    .digest("hex");
+exports.resetAdminPassword = async (req, res, next) => {
+  const { code, currentPassword, newPassword, confirmPassword } = req.body;
+  const response = {};
 
   try {
-    const user = await Admin.findOne({
-      resetPasswordToken,
-      resetPasswordExpire: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      res.status(400);
-      return next(new Error("Invalid Reset Token"));
+    const otpData = await otpmodel.findOne({ email: req.body.email, code });
+    if (!otpData) {
+      response.message = "Invalid OTP";
+      response.statusText = "error";
+      return res.status(400).json(response);
     }
 
-    user.password = password;
-    user.cpassword = cpassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
+    const currentTime = new Date().getTime();
+    if (otpData.expireIn < currentTime) {
+      response.message = "Token Expired";
+      response.statusText = "error";
+      return res.status(400).json(response);
+    }
 
+    const user = await Admin.findOne({ email: req.body.email });
+    if (!user) {
+      response.message = "User not found";
+      response.statusText = "error";
+      return res.status(400).json(response);
+    }
+
+    if (newPassword !== confirmPassword) {
+      response.message = "New password and confirm password do not match";
+      response.statusText = "error";
+      return res.status(400).json(response);
+    }
+
+    user.password = newPassword;
     await user.save();
 
-    res.status(201).json({
-      success: true,
-      message: "Password Reset Success",
-    });
+    response.message = "Password changed successfully";
+    response.statusText = "success";
+    return res.status(200).json(response);
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
 
+
+
+
 //========================================== Admin's Forget & Addig New PSWD Start ======================================================
-
-
 
 // ============================================ Set Admin Profile Api ==========================================================
 
 exports.adminSetProf = async (req, res, next) => {
   try {
-    const { name, email, number,adminId} = req.body;
+    const { name, email, number, adminId } = req.body;
     const profilePicture = req.file.path;
-
 
     const profile = await AdminProf.create({
       adminId,
       name,
       email,
       number,
-      profilePicture
+      profilePicture,
     });
 
     res.json({ message: "Data inserted successfully", profile });
@@ -210,16 +249,15 @@ exports.adminSetProf = async (req, res, next) => {
   }
 };
 
-
 // ============================================ Set Admin Profile Api ==========================================================
-
-
 
 // ================================================= Get All Statistics ==========================================================
 
 exports.getActiveBarbers = async (req, res, next) => {
   try {
-    const activeBarbersCount = await BarberProf.countDocuments({ isActive: true });
+    const activeBarbersCount = await BarberProf.countDocuments({
+      isActive: true,
+    });
     res.json({ activeBarbersCount });
     console.log(activeBarbersCount);
   } catch (error) {
@@ -228,11 +266,41 @@ exports.getActiveBarbers = async (req, res, next) => {
   }
 };
 
-
 exports.getRegisteredBarbers = async (req, res, next) => {
   try {
-    const totalBarbers = await BarberProf.countDocuments();
-    res.json({ totalBarbers });
+    const totalBarberShopsPromise = BarberShop.countDocuments();
+    const totalMembersPromise = User.countDocuments();
+    const totalParticipantsPromise = Participation.countDocuments();
+    const digitalStampCountPromise = DigitalStamp.countDocuments();
+    const activeMemberCountPromise = User.countDocuments({ isActive: true });
+    const activeBarbersCountPromise = BarberProf.countDocuments({
+      isActive: true,
+    });
+
+    const [
+      totalBarberShops,
+      digitalStampCount,
+      activeBarbersCount,
+      activeMemberCount,
+      totalMembers,
+      totalParticipants,
+    ] = await Promise.all([
+      totalBarberShopsPromise,
+      digitalStampCountPromise,
+      activeBarbersCountPromise,
+      activeMemberCountPromise,
+      totalMembersPromise,
+      totalParticipantsPromise,
+    ]);
+
+    res.json({
+      totalBarberShops,
+      digitalStampCount,
+      activeBarbersCount,
+      activeMemberCount,
+      totalMembers,
+      totalParticipants
+    });
   } catch (error) {
     console.log(error);
     next(error);
@@ -251,17 +319,19 @@ exports.getDigitalStampCount = async (req, res, next) => {
 
 // ================================================= Get All Statistics ==========================================================
 
-
-
-
-
-
-
-
-
-
 // ============================================================== Deletion & Restriction ========================================
 
+exports.getAllMembers = async (req, res, next) => {
+  try {
+    // Retrieve all members from the User model
+    const members = await User.find({}, 'email');
+
+    res.status(200).json({ members });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
 
 exports.deleteUser = async (req, res, next) => {
   let memberId = req.params.memberId;
@@ -285,38 +355,48 @@ exports.deleteUser = async (req, res, next) => {
 };
 
 exports.deleteBarber = async (req, res, next) => {
-     
-      let BarberId = req.params.BarberId;
-      BarberId = BarberId.trim();
-    
-      try {
-        const deletedUser = await Barber.deleteOne({ _id: BarberId });
+  let BarberId = req.params.BarberId;
+  BarberId = BarberId.trim();
 
-        if (deletedUser.deletedCount === 0) {
-          return res.status(404).json({ message: "User not found" });
-        }
+  try {
+    const deletedUser = await Barber.deleteOne({ _id: BarberId });
 
-          // Delete the barber's profile as well
-          await BarberProfile.deleteOne({ barberId: BarberId });
+    if (deletedUser.deletedCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-          await BarberShop.deleteOne({barberId: BarberId });
-          await BarberTime.deleteOne({barberId: BarberId });
-          await BarberPricing.deleteOne({barberId: BarberId });
+    // Delete the barber's profile as well
+    await BarberProfile.deleteOne({ barberId: BarberId });
 
+    await BarberShop.deleteOne({ barberId: BarberId });
+    await BarberTime.deleteOne({ barberId: BarberId });
+    await BarberPricing.deleteOne({ barberId: BarberId });
 
-          res.status(200).json({ message: "Barber and profile deleted successfully" });
+    res
+      .status(200)
+      .json({ message: "Barber and profile deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
 
+// Block User======================================== a user by ID========================================================
 
-      } catch (error) {
-        console.log(error);
-        next(error);
-      }
+exports.getAllBarbers = async (req, res, next) => {
+  try {
+    // Retrieve all barbers from the BarberProfileData model and populate the required fields
+    const barbers = await BarberProf.find({}, 'name email profilePicture').populate('barberId', 'email');
+
+    res.status(200).json({ barbers });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
 };
 
 
 
-
-// Block User======================================== a user by ID========================================================
 
 exports.blockBarber = async (req, res) => {
   try {
@@ -324,7 +404,7 @@ exports.blockBarber = async (req, res) => {
     const user = await Barber.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     user.isBlocked = true;
@@ -332,8 +412,8 @@ exports.blockBarber = async (req, res) => {
 
     return res.status(200).json({ isBlocked: true });
   } catch (error) {
-    console.error('Error blocking user:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error("Error blocking user:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -343,7 +423,7 @@ exports.unblockBarber = async (req, res) => {
     const user = await Barber.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     user.isBlocked = false;
@@ -351,11 +431,10 @@ exports.unblockBarber = async (req, res) => {
 
     return res.status(200).json({ isBlocked: false });
   } catch (error) {
-    console.error('Error unblocking user:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error("Error unblocking user:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 exports.blockMember = async (req, res) => {
   try {
@@ -363,7 +442,7 @@ exports.blockMember = async (req, res) => {
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     user.isBlocked = true;
@@ -371,8 +450,8 @@ exports.blockMember = async (req, res) => {
 
     return res.status(200).json({ isBlocked: true });
   } catch (error) {
-    console.error('Error blocking user:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error("Error blocking user:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -382,7 +461,7 @@ exports.unblockMember = async (req, res) => {
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     user.isBlocked = false;
@@ -390,27 +469,23 @@ exports.unblockMember = async (req, res) => {
 
     return res.status(200).json({ isBlocked: false });
   } catch (error) {
-    console.error('Error unblocking user:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error("Error unblocking user:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-
-
-
-
-
-
 //================================================ Get ratings for a specific product =============================================
-exports.getRatingPro= async (req, res,next) => {
+exports.getRatingPro = async (req, res, next) => {
   try {
-    const productRatings = await Rating.find({ product_id: req.params.product_id });
+    const productRatings = await Rating.find({
+      product_id: req.params.product_id,
+    });
     res.json(productRatings);
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-    next(error)
+    res.status(500).json({ error: "Internal Server Error" });
+    next(error);
   }
-}
+};
 
 //============================================== Get all ratings of a specific product =============================================
 exports.getAllRatings = async (req, res) => {
@@ -419,11 +494,9 @@ exports.getAllRatings = async (req, res) => {
 
     res.status(200).json(ratings);
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
-
 
 //============================================== Add a new rating for a specific product =============================================
 exports.postRatingPro = async (req, res) => {
@@ -432,11 +505,13 @@ exports.postRatingPro = async (req, res) => {
   try {
     const existingRating = await Rating.findOne({
       product_id: req.params.product_id,
-      user_id: user_id
+      user_id: user_id,
     });
 
     if (existingRating) {
-      return res.status(400).json({ error: 'User has already rated the product' });
+      return res
+        .status(400)
+        .json({ error: "User has already rated the product" });
     }
 
     const newRating = await Rating.create({
@@ -449,20 +524,18 @@ exports.postRatingPro = async (req, res) => {
 
     res.status(201).json(newRating);
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-
-
 //========================================================== contest setting =================================================
 
-exports.contestSet= async(req,res,next)=>{
+exports.contestSet = async (req, res, next) => {
   const { startDate, endDate } = req.body;
 
   // Validate input data
   if (!startDate || !endDate) {
-    return res.status(400).json({ message: 'Incomplete contest details' });
+    return res.status(400).json({ message: "Incomplete contest details" });
   }
 
   // Convert start and end dates to DateTime objects
@@ -472,27 +545,30 @@ exports.contestSet= async(req,res,next)=>{
   // Create a new contest instance
   const contest = new Contest({
     startDate: startDateTime.toJSDate(),
-    endDate: endDateTime.toJSDate()
+    endDate: endDateTime.toJSDate(),
   });
 
   // Save the contest to the database
-  contest.save()
+  contest
+    .save()
     .then(() => {
-      res.status(201).json({ message: 'Contest created successfully',contest });
+      res
+        .status(201)
+        .json({ message: "Contest created successfully", contest });
     })
     .catch((error) => {
-      res.status(500).json({ message: 'Failed to create contest', error });
+      res.status(500).json({ message: "Failed to create contest", error });
     });
-}
+};
 
 //============================================================= update contest api ==========================================
-exports.contestUpdate= async(req,res,next)=> {
+exports.contestUpdate = async (req, res, next) => {
   const { id } = req.params;
   const { startDate, endDate } = req.body;
 
   // Validate input data
   if (!startDate || !endDate) {
-    return res.status(400).json({ message: 'Incomplete contest details' });
+    return res.status(400).json({ message: "Incomplete contest details" });
   }
 
   // Convert start and end dates to DateTime objects
@@ -500,19 +576,20 @@ exports.contestUpdate= async(req,res,next)=> {
   const endDateTime = DateTime.fromISO(endDate);
 
   // Find and update the contest in the database
- const contest = Contest.findByIdAndUpdate(id, {
+  const contest = Contest.findByIdAndUpdate(id, {
     startDate: startDateTime.toJSDate(),
-    endDate: endDateTime.toJSDate()
+    endDate: endDateTime.toJSDate(),
   })
     .then(() => {
-      res.status(200).json({ message: 'Contest updated successfully', contest});
+      res
+        .status(200)
+        .json({ message: "Contest updated successfully", contest });
     })
     .catch((error) => {
-      res.status(500).json({ message: 'Failed to update contest', error });
-      next(error)
+      res.status(500).json({ message: "Failed to update contest", error });
+      next(error);
     });
 };
-
 
 exports.getContest = async (req, res, next) => {
   try {
@@ -521,7 +598,7 @@ exports.getContest = async (req, res, next) => {
 
     // Check if a contest exists
     if (!contest) {
-      return res.status(404).json({ message: 'No contest found' });
+      return res.status(404).json({ message: "No contest found" });
     }
 
     // Get the current date and time
@@ -529,12 +606,12 @@ exports.getContest = async (req, res, next) => {
 
     // Check if the contest has started
     if (currentDateTime < contest.startDate) {
-      return res.status(200).json({ message: 'Contest has not started yet' });
+      return res.status(200).json({ message: "Contest has not started yet" });
     }
 
     // Check if the contest has ended
     if (currentDateTime > contest.endDate) {
-      return res.status(200).json({ message: 'Contest has already ended' });
+      return res.status(200).json({ message: "Contest has already ended" });
     }
 
     // Calculate the remaining time in milliseconds
@@ -542,20 +619,19 @@ exports.getContest = async (req, res, next) => {
 
     // Convert the remaining time to days, hours, and minutes
     const days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+    const hours = Math.floor(
+      (remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    );
+    const minutes = Math.floor(
+      (remainingTime % (1000 * 60 * 60)) / (1000 * 60)
+    );
 
     // Return the remaining time
     res.status(200).json({ days, hours, minutes });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to get contest', error });
+    res.status(500).json({ message: "Failed to get contest", error });
   }
 };
-
-
-
-
-
 
 //========================================================== contest setting =================================================
 
@@ -567,7 +643,7 @@ exports.addStaff = async (req, res, next) => {
     // Check if staff email already exists
     const existingStaff = await Staff.findOne({ email });
     if (existingStaff) {
-      return res.status(400).json({ message: 'Staff email already exists' });
+      return res.status(400).json({ message: "Staff email already exists" });
     }
 
     // Create a new staff member
@@ -584,13 +660,9 @@ exports.addStaff = async (req, res, next) => {
     res.status(201).json({ message: "Staff member added successfully" });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
-
-
-
 
 exports.setPasswordStaff = async (req, res, next) => {
   try {
@@ -599,7 +671,7 @@ exports.setPasswordStaff = async (req, res, next) => {
     // Find the staff member with the given token
     const staff = await Staff.findOne({ resetPasswordToken: token });
     if (!staff) {
-      return res.status(400).json({ message: 'Invalid token' });
+      return res.status(400).json({ message: "Invalid token" });
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
@@ -609,10 +681,9 @@ exports.setPasswordStaff = async (req, res, next) => {
     staff.resetPasswordExpire = undefined;
     await staff.save();
 
-    res.status(200).json({ message: 'Password set successfully' });
+    res.status(200).json({ message: "Password set successfully" });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
-

@@ -27,15 +27,14 @@ const adminSchema = mongoose.Schema(
     cpassword: {
       type: String,
       required: [true, "Please confirm your password"],
-      // validate: {
-      //   validator: function (value) {
-      //     return value === this.password;
-      //   },
-      //   message: "Passwords do not match",
-      // },
     },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
+    role: {
+      type: String,
+      default: "admin",
+      enum: ["staff", "admin"],
+    },
   },
   {
     timestamps: true,

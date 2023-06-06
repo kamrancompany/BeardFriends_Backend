@@ -1,5 +1,6 @@
 const express=require('express')
 const { protect } = require('../middleware/auth');
+// const {authenticateAdmin}=require('../middleware/authAdmin')
 const multer  = require('multer')
 
 // ===================================================Multer =========================================================
@@ -35,7 +36,13 @@ const {
         setProfileDetails,
         setShopDetails,
         setOpenClosetime,
-        setPricing
+        setPricing,
+        participateInContest,
+        deleteParticipantPhoto,
+        getParticipants,
+        blockParticipant,
+        unblockParticipant,
+        deleteParticipant,
       
   } = require('../controllers/barbercontroller');
 
@@ -56,13 +63,13 @@ const {
 const {
         adminRegister,
         adminLogin,
-        adminForgetPswd,
-        adminResetPswd,
+        sendOTP,
+        resetAdminPassword,
+
         adminSetProf,
         getActiveBarbers,
         getRegisteredBarbers,
         getDigitalStampCount,
-
       
         getRatingPro,
         getAllRatings,
@@ -70,13 +77,15 @@ const {
       
 
         // Deletion & Restriction
-        deleteUser,
         deleteBarber,
-       
+        deleteUser,
         blockBarber,
         unblockBarber,
         blockMember,
         unblockMember,
+        getAllBarbers,
+        getAllMembers,
+
 
         // constest 
         contestSet,
@@ -117,8 +126,22 @@ const{
   router.post('/setBarberPro',upload.single('profilePicture'),protect, setProfileDetails)
   router.post('/setShopDetails',protect, setShopDetails)
   router.post('/setOpen&ClosingTime',protect, setOpenClosetime)
-  router.post('/setPrice',protect, setPricing)
-  
+  router.post('/setPrice',protect, setPricing),
+  router.post('/addParticipants',upload.single('picture'), participateInContest),
+  router.delete('/participation/:barberId',deleteParticipantPhoto);  
+  router.get('/participants',getParticipants);
+
+  // Block Participant
+router.put('/participantsblock/:participantId', blockParticipant);
+
+// Unblock Participant
+router.put('/participantsunblock/:participantId', unblockParticipant);
+
+router.delete('/participantsDelete/:participantId', deleteParticipant);
+
+// Get All Barbers
+router.get('/barbers', getAllBarbers);
+
 
   //Member Api's routes
   router.post('/registerMember', registerMember);
@@ -126,11 +149,21 @@ const{
   router.post('/forgetPassMember', forgetPassMember);
   router.post('/addnewpswdMember/:resetToken', addNewPswdMember);
 
+  router.delete('/deleteMember/:memberId', deleteUser);
+  // Get All Members
+router.get('/members', getAllMembers);
+
+
+
   //Admin Api's routes
   router.post('/adminRegister', adminRegister);
   router.post('/adminLogin', adminLogin);
-  router.post('/adminForgetPswd', adminForgetPswd);
-  router.post('/adminResetPswd/:resetToken', adminResetPswd);
+
+  // otp and reset api's 
+
+  router.post("/sendOTP", sendOTP);
+  router.post("/resetAdminPassword", resetAdminPassword);
+  
   router.post('/addStaff/', addStaff);
   router.post('/adminSetProf',upload.single('profilePicture'), adminSetProf)
   router.get('/getActive', getActiveBarbers);

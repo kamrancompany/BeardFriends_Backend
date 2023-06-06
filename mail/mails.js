@@ -95,8 +95,8 @@ const nodemailer = require('nodemailer');
       host: 'smtp.ethereal.email',
       port: 587,
       auth: {
-        user: 'jaylin.will88@ethereal.email',
-        pass: 'MQUyA16qRNmeggb5pf'
+        user: 'jasmin88@ethereal.email',
+        pass: 'NXpCPVb2ZCjFetb8rj'
       }
     });
   
@@ -117,3 +117,4 @@ const nodemailer = require('nodemailer');
   };
   
  
+

@@ -66,7 +66,7 @@ exports.addProduct = async (req, res, next) => {
     res.status(201).json({ message: "Product added successfully", product });
   } catch (error) {
     console.log(error);
-    next(error);
+    next(error); 
   }
 };
 
