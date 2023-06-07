@@ -54,6 +54,9 @@ const {
         loginMember,
         forgetPassMember,
         addNewPswdMember,
+        voteForParticipant,
+        getWinnerParticipants,
+        getOlderWinnerParticipants,
   }=require('../controllers/members')
   
 
@@ -131,16 +134,16 @@ const{
   router.delete('/participation/:barberId',deleteParticipantPhoto);  
   router.get('/participants',getParticipants);
 
-  // Block Participant
-router.put('/participantsblock/:participantId', blockParticipant);
+        // Block Participant
+      router.put('/participantsblock/:participantId', blockParticipant);
 
-// Unblock Participant
-router.put('/participantsunblock/:participantId', unblockParticipant);
+      // Unblock Participant
+      router.put('/participantsunblock/:participantId', unblockParticipant);
 
-router.delete('/participantsDelete/:participantId', deleteParticipant);
+      router.delete('/participantsDelete/:participantId', deleteParticipant);
 
-// Get All Barbers
-router.get('/barbers', getAllBarbers);
+      // Get All Barbers
+      router.get('/barbers', getAllBarbers);
 
 
   //Member Api's routes
@@ -148,10 +151,16 @@ router.get('/barbers', getAllBarbers);
   router.post('/loginMember', loginMember);
   router.post('/forgetPassMember', forgetPassMember);
   router.post('/addnewpswdMember/:resetToken', addNewPswdMember);
-
+  router.post('/vote', voteForParticipant);
   router.delete('/deleteMember/:memberId', deleteUser);
   // Get All Members
 router.get('/members', getAllMembers);
+
+// GET route to fetch winner participants
+router.get('/winners', getWinnerParticipants);
+
+// GET route to fetch older winner participants
+router.get('/older-winners',getOlderWinnerParticipants);
 
 
 

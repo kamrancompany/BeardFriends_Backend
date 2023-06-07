@@ -16,8 +16,12 @@ const participationSchema = new mongoose.Schema({
   },
   isBlocked: {
     type: Boolean,
-    default: false,
+    default: false
   },
+  voters: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Members'
+  }]
 });
 
 const Participation = mongoose.model('Participation', participationSchema);

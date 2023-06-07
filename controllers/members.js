@@ -3,6 +3,8 @@ const DigitalStamp = require('../models/membersmodel/digitalStamp');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const Participation = require('../models/barbermodels/participants');
+
 const nodemailer = require('nodemailer');
 const multer = require('multer')
 
@@ -169,4 +171,80 @@ exports.addNewPswdMember = async (req, res, next) => {
 };
 
 //========================================== Member's Forget & Addig New PSWD Start ======================================================
+
+
+exports.voteForParticipant = async (req, res, next) => {
+  try {
+    const { participationId, memberId } = req.body;
+
+    // Find the participation record
+    const participation = await Participation.findById(participationId);
+    if (!participation) {
+      return res.status(404).json({ message: "Participation not found" });
+    }
+
+    // Check if the participation is blocked
+    if (participation.isBlocked) {
+      return res.status(403).json({ message: "Participation is blocked" });
+    }
+
+    // Check if the member has already voted for this participation
+    if (participation.voters.includes(memberId)) {
+      return res.status(400).json({ message: "You have already voted for this participation" });
+    }
+
+    // Increment the vote count
+    participation.votes += 1;
+
+    // Add the member to the list of voters
+    participation.voters.push(memberId);
+
+    // Save the updated participation record
+    await participation.save();
+
+    res.status(200).json({ message: "Vote counted successfully", participation });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+
+
+
+
+exports.getWinnerParticipants = async (req, res, next) => {
+  try {
+    const limit = req.query.limit || 10; // Number of winners to fetch, default is 10
+
+    const winners = await Participation.find()
+      .sort({ votes: -1 }) // Sort in descending order of votes
+      .limit(parseInt(limit)) // Limit the number of winners to fetch
+      .populate('barberId', 'picture email') // Populate barberId with picture and email fields
+      .select('picture votes createdAt'); // Select only picture, votes, and createdAt fields
+
+    res.status(200).json({ winners });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+
+exports.getOlderWinnerParticipants = async (req, res, next) => {
+  try {
+    const limit = req.query.limit || 10; // Number of winners to fetch, default is 10
+
+    const olderWinners = await Participation.find()
+      .sort({ createdAt: 1 }) // Sort in ascending order of createdAt (oldest first)
+      .limit(parseInt(limit)) // Limit the number of winners to fetch
+      .populate('barberId', 'picture email') // Populate barberId with picture and email fields
+      .select('picture votes createdAt'); // Select only picture, votes, and createdAt fields
+
+    res.status(200).json({ olderWinners });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
 
