@@ -90,31 +90,59 @@ const nodemailer = require('nodemailer');
 
 
 
-  exports.sendAddStaffPswd = async (staff) => {
+  exports.sendAddStaffPswd = async (existingStaff) => {
     const transporter = nodemailer.createTransport({
       host: 'smtp.ethereal.email',
       port: 587,
       auth: {
-        user: 'jasmin88@ethereal.email',
-        pass: 'NXpCPVb2ZCjFetb8rj'
+        user: 'megane.mohr@ethereal.email',
+        pass: 'uzvGVguT8pQkVfwMwr'
       }
     });
   
 
-    const resetToken = staff.getResetPasswordToken(); // Generate a password reset token
-    const staffpswdlink = ` http://localhost:3000/#//${resetToken}`;
+    const resetToken = existingStaff.getSignedToken(); // Generate a password reset token
+    const staffpswdlink = ` http://localhost:3000/staff${resetToken}`;
   
   
     const mailOptions = {
       from: '<sean.witting@ethereal.email>',
-      to: staff.email,
+      to: existingStaff.email,
       subject: 'Add Staff Password',
       text: `Please click the following link to add your password`,
-      html: ` <a href="http://localhost:3000/#/newpswd"><b>Please follow this link to add your pasword: </b>${staffpswdlink}</a>`
+      html: ` <a href="http://localhost:3000/staff"><b>Please follow this link to add your pasword: </b>${staffpswdlink}</a>`
     };
   
     await transporter.sendMail(mailOptions);
   };
+
+
+
+
+   exports.sendInvitationEmail = async (email, resetToken) => {
+    // Configure nodemailer transporter
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      auth: {
+        user: 'megane.mohr@ethereal.email',
+        pass: 'uzvGVguT8pQkVfwMwr'
+      }
+    });
+  
+    // Define email options
+    const mailOptions = {
+      from: '<sean.witting@ethereal.email>',
+      to: email,
+      subject: 'Add Staff Password',
+      text: `Please click the following link to add your password`,
+      html: ` <a href="http://localhost:3000/staff"><b>Please follow this link to add your pasword: </b>${resetToken}</a>`
+    };
+  
+    // Send the email
+    await transporter.sendMail(mailOptions);
+  };
+  
   
  
 

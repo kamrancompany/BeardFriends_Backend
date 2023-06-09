@@ -7,11 +7,11 @@ const adminSchema = mongoose.Schema(
   {
     username: {
       type: String,
-      required: [true, "Please provide a username"],
+      // required: [true, "Please provide a username"],
     },
     email: {
       type: String,
-      required: [true, "Please provide an email"],
+      // required: [true, "Please provide an email"],
       unique: true,
       match: [
         /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
@@ -20,19 +20,19 @@ const adminSchema = mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Please provide a password"],
+      // required: [true, "Please provide a password"],
       minlength: 6,
       select: false,
     },
     cpassword: {
       type: String,
-      required: [true, "Please confirm your password"],
+      // required: [true, "Please confirm your password"],
     },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     role: {
       type: String,
-      default: "admin",
+      default: "staff",
       enum: ["staff", "admin"],
     },
   },

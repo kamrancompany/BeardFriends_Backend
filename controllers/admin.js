@@ -17,7 +17,7 @@ const Participation = require('../models/barbermodels/participants');
 
 // otp and resetemail
 const otpmodel=require("../models/admin_model/otp");
-const { sendEmailWithOTP, generateOTP } = require("../mail/pswdResetMail");
+const { sendEmailWithOTP, generateOTP} = require("../mail/pswdResetMail");
 
 const Product = require("../models/e_commerce/productSchema");
 const Order = require("../models/e_commerce/orderSchema");
@@ -37,6 +37,7 @@ const {
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendAddStaffPswd,
+  sendInvitationEmail
 } = require("../mail/mails");
 const { validationResult } = require("express-validator");
 const barber = require("../models/barbermodels/users");
@@ -637,53 +638,80 @@ exports.getContest = async (req, res, next) => {
 
 // ====================================================== Add Staff Api =========================================================
 exports.addStaff = async (req, res, next) => {
-  try {
-    const { email } = req.body;
+  const { email } = req.body;
 
-    // Check if staff email already exists
-    const existingStaff = await Staff.findOne({ email });
-    if (existingStaff) {
-      return res.status(400).json({ message: "Staff email already exists" });
+  // Validate input fields
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return next(errors.array());
+  }
+
+  try {
+    const user = await Admin.findOne({ email });
+    if (user) {
+      return next('Staff email already exists');
     }
 
-    // Create a new staff member
-    const staff = new Staff({ email });
-    await staff.save();
+    // Create a new user object
+    const newUser = new Admin({
+      email,
+    });
 
-    // Generate the password reset token for the staff member
-    const token = staff.getSignedToken();
-    await staff.save();
+    // Generate a password reset token and save it to the user
+    const resetToken = newUser.getResetPasswordToken();
+    console.log(resetToken);
+    await newUser.save();
 
-    // Send the password reset email to the staff member
-    await sendAddStaffPswd(staff, token);
+    // Send the password reset email
+    await sendInvitationEmail(email, resetToken);
 
-    res.status(201).json({ message: "Staff member added successfully" });
+    res.status(200).json({ message: 'Password Add email sent', resetToken });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    next(error);
   }
 };
+
 
 exports.setPasswordStaff = async (req, res, next) => {
-  try {
-    const { token, password } = req.body;
+  const { email } = req.body;
+  const { password } = req.body;
+  const { cpassword } = req.body;
 
-    // Find the staff member with the given token
-    const staff = await Staff.findOne({ resetPasswordToken: token });
+  if (!password || !cpassword) {
+    res.status(400);
+    return next(new Error("Please provide a new password"));
+  }
+
+  try {
+    // Find the staff member by email
+    const staff = await Admin.findOne({ email });
+
     if (!staff) {
-      return res.status(400).json({ message: "Invalid token" });
+      res.status(400);
+      return next(new Error("Staff member not found"));
     }
 
-    const hashedPassword = await bcryptjs.hash(password, 10);
-    // Set the new password
-    staff.password = hashedPassword;
+    // Check if the provided passwords match
+    if (password !== cpassword) {
+      res.status(400);
+      return next(new Error("Passwords do not match"));
+    }
+
+    staff.password = password;
+    staff.cpassword = cpassword;
     staff.resetPasswordToken = undefined;
     staff.resetPasswordExpire = undefined;
+
     await staff.save();
 
-    res.status(200).json({ message: "Password set successfully" });
+    res.status(201).json({
+      success: true,
+      message: "Password Reset Success",
+    });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    next(error);
   }
 };
+
+

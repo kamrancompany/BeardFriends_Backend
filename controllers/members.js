@@ -217,7 +217,7 @@ exports.getWinnerParticipants = async (req, res, next) => {
   try {
     const limit = req.query.limit || 10; // Number of winners to fetch, default is 10
 
-    const winners = await Participation.find()
+    const winners = await Participation.findOne()
       .sort({ votes: -1 }) // Sort in descending order of votes
       .limit(parseInt(limit)) // Limit the number of winners to fetch
       .populate('barberId', 'picture email') // Populate barberId with picture and email fields
@@ -239,7 +239,7 @@ exports.getOlderWinnerParticipants = async (req, res, next) => {
       .sort({ createdAt: 1 }) // Sort in ascending order of createdAt (oldest first)
       .limit(parseInt(limit)) // Limit the number of winners to fetch
       .populate('barberId', 'picture email') // Populate barberId with picture and email fields
-      .select('picture votes createdAt'); // Select only picture, votes, and createdAt fields
+      .seelct('picture votes createdAt'); // Select only picture, votes, and createdAt fields
 
     res.status(200).json({ olderWinners });
   } catch (error) {
